@@ -9,7 +9,8 @@ var {
   TouchableOpacity,
   TextInput,
   Animated,
-  DeviceEventEmitter
+  DeviceEventEmitter,
+  Geolocation
 } = require('react-native');
 
 var friends = [
@@ -45,15 +46,30 @@ module.exports = React.createClass({
     console.log('statessdfsd');
     return {
       dataSource: ds.cloneWithRows(friends),
-      search: ''
+      search: '',
+      userLocation: {
+        latitude: 37.773972,
+        longitude: -122.431297,
+        animateDrop: true
+      },
+      mapRegion: {
+        latitude: 0,
+        longitude: 0,
+        latitudeDelta: 0,
+        longitudeDelta: 0
+      }
     };
   },
   render: function() {
-    console.log('search', typeof this.state.search);
+    // navigator.Geolocation.getCurrentPosition((e) => console.log('e', e));
     return (
       <Animated.View style={styles.container}>
         <MapView
           style={styles.map}
+          annotations={[
+            this.state.userLocation
+          ]}
+          region={this.state.mapRegion}
         />
         <View style={styles.nav}>
           <View style={styles.search}>
@@ -119,13 +135,34 @@ module.exports = React.createClass({
   componentDidMount: function() {
     _keyboardWillShowSubscription = DeviceEventEmitter.addListener('keyboardWillShow', (e) => console.log('keyboardWillShow', e));
     _keyboardWillHideSubscription = DeviceEventEmitter.addListener('keyboardWillHide', (e) => console.log('keyboardWillHide', e));
+    this.location();
+  },
+  location() {
+    navigator.geolocation.getCurrentPosition(
+      location => {
+        this.setState({
+          userLocation: {
+            latitude: location.coords.latitude,
+            longitude: location.coords.longitude
+          },
+          mapRegion: {
+            latitude: location.coords.latitude,
+            longitude: location.coords.longitude,
+            latitudeDelta: 0.14,
+            longitudeDelta: 0.14
+          }
+        });
+      },
+      error => {
+        console.log('error', error);
+      });
   }
 });
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    marginTop: -110
+    marginTop: 0
   },
   map: {
     flex: 3
